@@ -8,10 +8,6 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-<<<<<<< HEAD
-=======
-env/
->>>>>>> Initial skeleton.
 build/
 develop-eggs/
 dist/
@@ -20,6 +16,9 @@ eggs/
 .eggs/
 lib/
 lib64/
+bin/
+include/
+lib64
 parts/
 sdist/
 var/
@@ -27,10 +26,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-<<<<<<< HEAD
 MANIFEST
-=======
->>>>>>> Initial skeleton.
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -61,10 +57,7 @@ coverage.xml
 # Django stuff:
 *.log
 local_settings.py
-<<<<<<< HEAD
 db.sqlite3
-=======
->>>>>>> Initial skeleton.
 
 # Flask stuff:
 instance/
@@ -91,7 +84,6 @@ celerybeat-schedule
 # SageMath parsed files
 *.sage.py
 
-<<<<<<< HEAD
 # Environments
 .env
 .venv
@@ -100,15 +92,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-=======
-# dotenv
-.env
-
-# virtualenv
-.venv
-venv/
-ENV/
->>>>>>> Initial skeleton.
 
 # Spyder project settings
 .spyderproject
