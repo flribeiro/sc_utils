@@ -3,6 +3,7 @@ import re
 import string
 import argparse
 import sys
+import uuid
 from random import randint
 
 def validar_cpf(cpf):
@@ -125,6 +126,43 @@ def geradorDeCpf( formatar ):
    else:
       return cpf
 
+def geradorDeUuid(format=False):
+   return uuid.uuid4()
+
+def pontes_comandos(ponte):
+   switcher = {
+      'cartao': f'ssh -L {args.porta}:endereco_card:3306 {args.user}@0.0.0.0',
+      'antifraude': f'ssh -L {args.porta}:endereco_antifraude:3306 {args.user}@1.1.1.1'
+   }
+   return switcher.get(ponte, lambda: 'Ponte não definida.')
+
+def ponte():
+   print(f'Estabelecendo a ponte {args.nome} com o usuário {args.user} na porta {args.porta}.')
+   print((pontes_comandos(args.nome)))
+   os.system(pontes_comandos(args.nome))
+
+def test():
+   os.system(f'ls -lh{args.opt}')
+
+def select_generators(tipo):
+   switcher = {
+      'cpf': geradorDeCpf,
+      'uuid': geradorDeUuid
+   }
+   func = switcher.get(tipo, lambda: 'Tipo inválido de gerador.')
+   for n in range(args.num):
+      print(func(args.format))
+
+def parse_calling(choice):
+   switcher = {
+      'gen': select_generators,
+      'val': validar_cpf,
+      'p': ponte,
+      'vpn': print,
+      'test': test
+   }
+   func = switcher.get(choice, lambda: 'Opção inválida.')
+   func(args.cpf)
 
 if __name__ == "__main__":
    parser = argparse.ArgumentParser(prog='sc_utils',
@@ -132,7 +170,7 @@ if __name__ == "__main__":
                                                 'para a Squad Crédito.',
                                     epilog='Squad Crédito - Luizalabs, 2019.')
    subparsers = parser.add_subparsers(title='sub-comandos', description='comandos válidos',
-                                       help='help adicional')
+                                       help='help adicional', dest='sp_name')
    
    g_parser = subparsers.add_parser('gen', help='gerador de CPF/UUID')
    g_parser.add_argument('-t', '--type', help='Gera um CPF válido ou UUID', choices=['cpf', 'uuid'])
@@ -153,6 +191,12 @@ if __name__ == "__main__":
    vpn_parser = subparsers.add_parser('vpn', help='estabelece vpn')
    vpn_parser.add_argument('vpn', action='store_true', default=True, help=argparse.SUPPRESS)
 
+   test_parser = subparsers.add_parser('test', help='subparser para testes')
+   test_parser.add_argument('test', action='store_true', default=True, help=argparse.SUPPRESS)
+   test_parser.add_argument('opt', help='posicional', type=str)
+
    parser.add_argument('--version', action='version', version='%(prog)s 1.0')
    args = parser.parse_args()
    print(args)
+
+   parse_calling(args.sp_name)
