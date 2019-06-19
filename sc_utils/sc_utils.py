@@ -6,48 +6,50 @@ import sys
 import uuid
 from random import randint
 
-def validar_cpf(cpf):
-    """
-    Retorna o CPF válido sanitizado ou False.
+def validar_cpf(ns):
+   cpf = ns.cpf
+   """
+   Retorna o CPF válido sanitizado ou False.
 
-    # CPFs corretos
-    >>> validar_cpf('123.456.789-09')
-    '12345678909'
-    >>> validar_cpf('98765432100')
-    '98765432100'
-    >>> validar_cpf(' 123 123 123 87 ')
-    '12312312387'
+   # CPFs corretos
+   >>> validar_cpf('123.456.789-09')
+   '12345678909'
+   >>> validar_cpf('98765432100')
+   '98765432100'
+   >>> validar_cpf(' 123 123 123 87 ')
+   '12312312387'
 
-    # CPFs incorretos
-    >>> validar_cpf('12345678900')
-    False
-    >>> validar_cpf('1234567890')
-    False
-    >>> validar_cpf('')
-    False
-    >>> validar_cpf(None)
-    False
-    """
-    cpf = ''.join(re.findall(r'\d', str(cpf)))
+   # CPFs incorretos
+   >>> validar_cpf('12345678900')
+   False
+   >>> validar_cpf('1234567890')
+   False
+   >>> validar_cpf('')
+   False
+   >>> validar_cpf(None)
+   False
+   """
+   cpf = ''.join(re.findall(r'\d', str(cpf)))
 
-    if not cpf or len(cpf) < 11:
-        return False
+   if not cpf or len(cpf) < 11:
+      print('CPF inválido.')
 
-    antigo = [int(d) for d in cpf]
+   antigo = [int(d) for d in cpf]
 
-    # Gera CPF com novos dígitos verificadores e compara com CPF informado
-    novo = antigo[:9]
-    while len(novo) < 11:
-        resto = sum([v * (len(novo) + 1 - i) for i, v in enumerate(novo)]) % 11
+   # Gera CPF com novos dígitos verificadores e compara com CPF informado
+   novo = antigo[:9]
+   while len(novo) < 11:
+      resto = sum([v * (len(novo) + 1 - i) for i, v in enumerate(novo)]) % 11
 
-        digito_verificador = 0 if resto <= 1 else 11 - resto
+      digito_verificador = 0 if resto <= 1 else 11 - resto
 
-        novo.append(digito_verificador)
+      novo.append(digito_verificador)
 
-    if novo == antigo:
-        return cpf
+   if novo == antigo:
+      print(f'CPF válido: {cpf}')
+      return None
 
-    return False
+   print('CPF inválido.')
 
 '''
  * Essa função gera um número de CPF válido.
@@ -87,7 +89,8 @@ def validar_cpf(cpf):
  * se o resto for 2, 3, 4, 5, 6, 7, 8, 9 ou 10, k será 11 - resto
  *
  '''
-def geradorDeCpf( formatar ):
+def geradorDeCpf(ns):
+   formatar = ns.format
 
    # 9 números aleatórios
    arNumeros = []
@@ -126,45 +129,50 @@ def geradorDeCpf( formatar ):
    else:
       return cpf
 
-def geradorDeUuid(format=False):
+def geradorDeUuid():
    return uuid.uuid4()
 
-def pontes_comandos(ponte):
+def pontes_comandos(ns):
    switcher = {
-      'cartao': f'ssh -L {args.porta}:endereco_card:3306 {args.user}@0.0.0.0',
-      'antifraude': f'ssh -L {args.porta}:endereco_antifraude:3306 {args.user}@1.1.1.1'
+      'cartao': f'ssh -L {ns.porta}:10.215.226.71:3306 {ns.user}@bastion-sa-vpc-shared.gcp.luizalabs.com',
+      'antifraude': f'ssh -L {ns.porta}:10.215.226.72:3306 {ns.user}@bastion-sa-vpc-shared.gcp.luizalabs.com',
+      'nickfury': f'ssh -L {ns.porta}:10.215.226.45:3306 {ns.user}@bastion-sa-vpc-shared.gcp.luizalabs.com',
+      'cdc': f'echo Ponte indisponível.',
+      'valecompra': f'echo Ponte indisponível.'
    }
-   return switcher.get(ponte, lambda: 'Ponte não definida.')
+   return switcher.get(ns.nome, lambda: 'Ponte não definida.')
 
-def ponte():
-   print(f'Estabelecendo a ponte {args.nome} com o usuário {args.user} na porta {args.porta}.')
-   print((pontes_comandos(args.nome)))
-   os.system(pontes_comandos(args.nome))
+def ponte(ns):
+   print(f'Estabelecendo a ponte {ns.nome} com o usuário {ns.user} na porta {ns.porta}.')
+   os.system(pontes_comandos(ns))
+
+def estabelece_vpn(ns):
+   os.system(f'sudo vpnc vpn-ML.conf')
 
 def test():
    os.system(f'ls -lh{args.opt}')
 
-def select_generators(tipo):
+def select_generators(ns):
    switcher = {
       'cpf': geradorDeCpf,
       'uuid': geradorDeUuid
    }
-   func = switcher.get(tipo, lambda: 'Tipo inválido de gerador.')
-   for n in range(args.num):
-      print(func(args.format))
+   func = switcher.get(ns.type, lambda: 'Tipo inválido de gerador.')
+   for n in range(ns.num):
+      print(func())
 
-def parse_calling(choice):
+def parse_calling(choice, ns):
    switcher = {
       'gen': select_generators,
       'val': validar_cpf,
       'p': ponte,
-      'vpn': print,
+      'vpn': estabelece_vpn,
       'test': test
    }
    func = switcher.get(choice, lambda: 'Opção inválida.')
-   func(args.cpf)
+   func(ns)
 
-if __name__ == "__main__":
+def main():
    parser = argparse.ArgumentParser(prog='sc_utils',
                                     description='App CLI destinado a automações cotidianas '
                                                 'para a Squad Crédito.',
@@ -183,7 +191,7 @@ if __name__ == "__main__":
 
    p_parser = subparsers.add_parser('p', help='estabelece uma das pontes')
    p_parser.add_argument('-n', '--nome', help='nome da ponte que será estabelecida',
-                           choices=['cartao', 'antifraude', 'cdc', 'valecompra'])
+                           choices=['cartao', 'antifraude', 'nickfury', 'cdc', 'valecompra'])
    p_parser.add_argument('-p', '--porta', help='porta usada para conexão pela ponte',
                            type=int, default=3390)
    p_parser.add_argument('-u', '--user', help='usuário para autenticação', type=str)
@@ -197,6 +205,9 @@ if __name__ == "__main__":
 
    parser.add_argument('--version', action='version', version='%(prog)s 1.0')
    args = parser.parse_args()
-   print(args)
+   print(vars(args))
 
-   parse_calling(args.sp_name)
+   parse_calling(args.sp_name, args)
+
+if __name__ == "__main__":
+   main()
