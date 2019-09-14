@@ -129,7 +129,7 @@ def geradorDeCpf(ns):
    else:
       return cpf
 
-def geradorDeUuid():
+def geradorDeUuid(ns):
    return uuid.uuid4()
 
 def pontes_comandos(ns):
@@ -149,9 +149,6 @@ def ponte(ns):
 def estabelece_vpn(ns):
    os.system(f'sudo vpnc vpn-ML.conf')
 
-def test():
-   os.system(f'ls -lh{args.opt}')
-
 def select_generators(ns):
    switcher = {
       'cpf': geradorDeCpf,
@@ -159,7 +156,7 @@ def select_generators(ns):
    }
    func = switcher.get(ns.type, lambda: 'Tipo inválido de gerador.')
    for n in range(ns.num):
-      print(func())
+      print(func(ns))
 
 def parse_calling(choice, ns):
    switcher = {
@@ -167,45 +164,103 @@ def parse_calling(choice, ns):
       'val': validar_cpf,
       'p': ponte,
       'vpn': estabelece_vpn,
-      'test': test
    }
    func = switcher.get(choice, lambda: 'Opção inválida.')
    func(ns)
 
 def main():
-   parser = argparse.ArgumentParser(prog='sc_utils',
-                                    description='App CLI destinado a automações cotidianas '
-                                                'para a Squad Crédito.',
-                                    epilog='Squad Crédito - Luizalabs, 2019.')
-   subparsers = parser.add_subparsers(title='sub-comandos', description='comandos válidos',
-                                       help='help adicional', dest='sp_name')
+   parser = argparse.ArgumentParser(
+      prog='sc_utils',
+      description='App CLI destinado a automações cotidianas '
+                  'para a Squad Crédito.',
+      epilog='Squad Crédito - Luizalabs, 2019.'
+   )
+   subparsers = parser.add_subparsers(
+      title='sub-comandos', 
+      description='comandos válidos',
+      help='help adicional', 
+      dest='sp_name'
+   )
    
-   g_parser = subparsers.add_parser('gen', help='gerador de CPF/UUID')
-   g_parser.add_argument('-t', '--type', help='Gera um CPF válido ou UUID', choices=['cpf', 'uuid'])
-   g_parser.add_argument('-n', '--num', help='Quantidade de itens a gerar', type=int, default=1)
-   g_parser.add_argument('-f', '--format',
-                        help='Formata saída para CPFs gerados', action='store_true')
+   g_parser = subparsers.add_parser(
+      'gen', 
+      help='gerador de CPF/UUID'
+   )
    
-   v_parser = subparsers.add_parser('val', help='validador de CPF')
-   v_parser.add_argument('cpf', help='CPF a ser validado (somente números)', type=str)
+   g_parser.add_argument(
+      '-t', '--type', 
+      help='Gera um CPF válido ou UUID', 
+      choices=[
+         'cpf', 
+         'uuid'
+      ]
+   )
+   g_parser.add_argument(
+      '-n', '--num', 
+      help='Quantidade de itens a gerar', 
+      type=int, 
+      default=1
+   )
+   g_parser.add_argument(
+      '-f', '--format',
+      help='Formata saída para CPFs gerados', 
+      action='store_true'
+   )
+   
+   v_parser = subparsers.add_parser(
+      'val', 
+      help='validador de CPF'
+   )
+   v_parser.add_argument(
+      'cpf', 
+      help='CPF a ser validado (somente números)', 
+      type=str
+   )
 
-   p_parser = subparsers.add_parser('p', help='estabelece uma das pontes')
-   p_parser.add_argument('-n', '--nome', help='nome da ponte que será estabelecida',
-                           choices=['cartao', 'antifraude', 'nickfury', 'cdc', 'valecompra'])
-   p_parser.add_argument('-p', '--porta', help='porta usada para conexão pela ponte',
-                           type=int, default=3390)
-   p_parser.add_argument('-u', '--user', help='usuário para autenticação', type=str)
+   p_parser = subparsers.add_parser(
+      'p', 
+      help='estabelece uma das pontes'
+   )
+   p_parser.add_argument(
+      '-n', '--nome', 
+      help='nome da ponte que será estabelecida',
+      choices=['cartao', 'antifraude', 'nickfury', 'cdc', 'valecompra']
+   )
+   p_parser.add_argument(
+      '-p', '--porta', 
+      help='porta usada para conexão pela ponte',
+      type=int, 
+      default=3390
+   )
+   p_parser.add_argument(
+      '-u', '--user', 
+      help='usuário para autenticação', 
+      type=str
+   )
 
-   vpn_parser = subparsers.add_parser('vpn', help='estabelece vpn')
-   vpn_parser.add_argument('vpn', action='store_true', default=True, help=argparse.SUPPRESS)
+   vpn_parser = subparsers.add_parser(
+      'vpn', 
+      help='estabelece vpn'
+   )
+   vpn_parser.add_argument(
+      'vpn', 
+      action='store_true', 
+      default=True, 
+      help=argparse.SUPPRESS
+   )
 
-   test_parser = subparsers.add_parser('test', help='subparser para testes')
-   test_parser.add_argument('test', action='store_true', default=True, help=argparse.SUPPRESS)
-   test_parser.add_argument('opt', help='posicional', type=str)
+   parser.add_argument(
+      '--version', 
+      action='version', 
+      version='%(prog)s 1.0'
+   )
 
-   parser.add_argument('--version', action='version', version='%(prog)s 1.0')
+   if len(sys.argv) == 1:
+      parser.print_help(sys.stderr)
+      sys.exit(1)
+
    args = parser.parse_args()
-   print(vars(args))
+   # print(vars(args))
 
    parse_calling(args.sp_name, args)
 
